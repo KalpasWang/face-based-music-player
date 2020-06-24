@@ -1,0 +1,41 @@
+body {
+  background-color: black;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* #webcam {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+#player {
+  position: absolute;
+  z-index: 120;
+  font-size: x-large;
+  color: aliceblue;
+  text-align: center;
+  height: 100%;
+  width: 100%;
+} */
+
+/* #player .container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+} */
+
+canvas {
+  position: absolute;
+  z-index: 100;
+}
