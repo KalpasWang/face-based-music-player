@@ -5,6 +5,7 @@
       surprised: 0,
     };
   let currentMusic = null;
+  let prevExpression = null;
 
   Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -20,7 +21,93 @@
       }})
       .then(stream => webcam.srcObject = stream)
       .catch(err => console.error(err))
-  }  
+  };
+  
+  webcam.addEventListener('play', () => {
+    let emotionsDiv = null;
+    let timeoutId = null;
+    const canvas = faceapi.createCanvasFromMedia(webcam);
+    const canvasDisplaySize = { width: webcam.clientWidth, height: webcam.clientHeight };
+
+    canvas.classList.add('absolute', 'z-10');
+    document.body.append(canvas);
+    faceapi.matchDimensions(canvas, canvasDisplaySize);
+
+    currentMusic = audioFactory('audio/rock.mp3');
+
+    setInterval(async () => {
+      const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+      console.log(detection);
+
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      if(detection) {
+        const resizedDetections = faceapi.resizeResults(detection, canvasDisplaySize);
+        faceapi.draw.drawDetections(canvas, resizedDetections);
+        // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+
+        const expression = detectExpression(detection);
+        // if(expression) console.log(expression);
+
+        if(Number.isInteger(expression)) {
+          // if(!emotionsDiv) {
+          //   const tmp = document.getElementById('emotions');
+          //   if(!tmp) return;
+          //   emotionsDiv = tmp;
+          // }
+
+          // emotionsDiv.children[expression].classList.add('bg-blue-500', 'bg-opacity-75');
+          // const clickAudio = new Audio('audio/click.mp3');
+          // clickAudio.play();
+
+          // if(timeoutId) clearTimeout(timeoutId);
+          // timeoutId = setTimeout(() => {
+          //   emotionsDiv.children[expression].classList.remove('bg-blue-500', 'bg-opacity-75');
+          // }, 200);
+
+          switch(expression) {
+            case emotionEnum.surprised:
+              playOrPauseAudio();
+              break;
+            default:
+          }
+        }
+      }
+    }, 300)
+  });
+
+  function detectExpression(detection) {
+    const emotions = [];
+    emotions[emotionEnum.surprised] = detection.expressions['surprised'] || 0;
+
+
+    for(let [k, v] of Object.entries(detection.expressions)) {
+      if(v > emotions[emotionEnum.surprised] && emotionEnum[k] === undefined) {
+        prevExpression = null;
+        return;
+      }
+    }
+    
+    if(emotionEnum.surprised === prevExpression) {
+      prevExpression = null;
+      return emotionEnum.surprised;
+    } 
+
+    prevExpression = null;
+  };
+
+  function playOrPauseAudio() {
+    if(!currentMusic) return;
+
+    currentMusic.paused ? currentMusic.play() : currentMusic.pause();
+  };
+
+  function audioFactory(url) {
+    const audio = new Audio(url);
+    audio.pause();
+    audio.currentTime = 0;
+    return audio;
+  }
 }());
 
 // const webcam = document.getElementById('webcam');
