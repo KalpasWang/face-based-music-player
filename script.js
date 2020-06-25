@@ -27,17 +27,19 @@
     let emotionsDiv = null;
     let timeoutId = null;
     const canvas = faceapi.createCanvasFromMedia(webcam);
-    const canvasDisplaySize = { width: webcam.clientWidth, height: webcam.clientHeight };
-
     canvas.classList.add('absolute', 'z-10');
-    document.body.append(canvas);
+    canvas.style.top = webcam.offsetTop + 'px';
+    canvas.style.left = webcam.offsetLeft + 'px';
+    document.getElementById('container').append(canvas);
+
+    const canvasDisplaySize = { width: webcam.videoWidth, height: webcam.videoHeight };
     faceapi.matchDimensions(canvas, canvasDisplaySize);
 
     currentMusic = audioFactory('audio/rock.mp3');
 
     setInterval(async () => {
       const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-      console.log(detection);
+      // console.log(detection);
 
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
       if(detection) {
@@ -47,7 +49,7 @@
         faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
 
         const expression = detectExpression(detection);
-        // if(expression) console.log(expression);
+        if(expression) console.log(expression);
 
         if(Number.isInteger(expression)) {
           // if(!emotionsDiv) {
