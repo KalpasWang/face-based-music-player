@@ -6,6 +6,7 @@
     };
   let currentMusic = null;
   let prevExpression = null;
+  let stopDetectingExpression = false;
 
   Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -34,8 +35,15 @@
 
     const canvasDisplaySize = { width: webcam.videoWidth, height: webcam.videoHeight };
     faceapi.matchDimensions(canvas, canvasDisplaySize);
+    // const { width, height } = canvasDisplaySize;
+    // ctx = canvas.getContext('2d');
+    // ctx.fillStyle = 'rgba(43, 108, 176, 0.75)';
+    // ctx.fillRect(0, 0, 50, height);
+
+    // const videoOverlay
 
     currentMusic = audioFactory('audio/rock.mp3');
+
 
     setInterval(async () => {
       const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
@@ -52,33 +60,22 @@
         if(expression) console.log(expression);
 
         if(Number.isInteger(expression)) {
-          // if(!emotionsDiv) {
-          //   const tmp = document.getElementById('emotions');
-          //   if(!tmp) return;
-          //   emotionsDiv = tmp;
-          // }
 
-          // emotionsDiv.children[expression].classList.add('bg-blue-500', 'bg-opacity-75');
-          // const clickAudio = new Audio('audio/click.mp3');
-          // clickAudio.play();
-
-          // if(timeoutId) clearTimeout(timeoutId);
-          // timeoutId = setTimeout(() => {
-          //   emotionsDiv.children[expression].classList.remove('bg-blue-500', 'bg-opacity-75');
-          // }, 200);
 
           switch(expression) {
             case emotionEnum.surprised:
-              playOrPauseAudio();
+              playPauseBtn.click();
               break;
             default:
           }
         }
       }
-    }, 300)
+    }, 200)
   });
 
   function detectExpression(detection) {
+    if(stopDetectingExpression) return;
+
     const emotions = [];
     emotions[emotionEnum.surprised] = detection.expressions['surprised'] || 0;
 
@@ -89,19 +86,11 @@
         return;
       }
     }
-    
-    if(emotionEnum.surprised === prevExpression) {
-      prevExpression = null;
-      return emotionEnum.surprised;
-    } 
 
-    prevExpression = null;
-  };
+    stopDetectingExpression = true;
+    setTimeout(() => { stopDetectingExpression = false; }, 3000);
 
-  function playOrPauseAudio() {
-    if(!currentMusic) return;
-
-    currentMusic.paused ? currentMusic.play() : currentMusic.pause();
+    return emotionEnum.surprised;
   };
 
   function audioFactory(url) {
@@ -109,7 +98,31 @@
     audio.pause();
     audio.currentTime = 0;
     return audio;
+  };
+
+  function playBeepSound() {
+    const beepSound = audioFactory('audio/beep.mp3');
+    beepSound.play();
   }
+
+  playPauseBtn.addEventListener('click', () => {
+    if(!currentMusic) {
+      currentMusic = audioFactory('audio/rock.mp3');
+    }
+
+    playBeepSound();
+    currentMusic.paused ? playMusic() : pauseMusic();
+  });
+
+  function playMusic() {
+    currentMusic.play();
+    playPauseBtn.innerHTML = '<i class="far fa-pause-circle"></i>';
+  };
+
+  function pauseMusic() {
+    currentMusic.pause();
+    playPauseBtn.innerHTML = '<i class="far fa-play-circle"></i>';
+  };
 }());
 
 // const webcam = document.getElementById('webcam');
