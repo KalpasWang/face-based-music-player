@@ -13,10 +13,16 @@
     <h1 class="text-2xl my-8 text-gray-300">Face-Triggered Music Player</h1>
     <div>
       <video id="webcam" class="object-contain my-0 mx-auto" height="400" autoplay muted></video>
-      <!-- <div id="video-overlay">
-        <div id="volume-up"><i class="fas fa-volume-up"></i></div>
-        <div id="volume-down"><i class="fas fa-volume-down"></i></div>
-      </div> -->
+      <div id="video-overlay" class="absolute">
+        <div class="w-full h-full flex justify-between items-stretch">
+          <div id="volume-up" class="w-1/4 bg-blue-700 bg-opacity-75 text-2xl text-white flex justify-center items-center cursor-pointer z-20">
+            <i class="fas fa-volume-up"></i>
+          </div>
+          <div id="volume-down"class="w-1/4 bg-blue-700 bg-opacity-75 text-2xl text-white flex justify-center items-center cursor-pointer z-20">
+            <i class="fas fa-volume-down"></i>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="w-full lg:w-1/2 my-6">
       <input id="range" class="w-2/3" type="range" value="0" min="0" max="300">
