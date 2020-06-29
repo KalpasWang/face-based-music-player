@@ -39,6 +39,7 @@
     faceapi.matchDimensions(canvas, canvasDisplaySize);
 
     resizeVideoOverlay();
+    initAudioWaveforms();
 
     setInterval(async () => {
       const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
@@ -77,6 +78,44 @@
     videoOverlay.style.top = webcam.offsetTop + 'px';
     videoOverlay.style.left = webcam.offsetLeft + 'px';
   };
+
+  function initAudioWaveforms() {
+    checkCurrentMusicExists();
+
+    const audioContext = new AudioContext(); 
+    const analyser = audioContext.createAnalyser(); 
+    const waveformCanvas = document.getElementById('waveform');
+    const canvasContext = waveformCanvas.getContext('2d');
+  
+    // Re-route audio playback into the processing graph of the AudioContext
+    const source = audioContext.createMediaElementSource(currentMusic); 
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+    frameLooper();
+  
+    function frameLooper(){
+      const canvasWidth = waveformCanvas.offsetWidth;
+      const canvasHeight = waveformCanvas.offsetHeight;
+      let fbcArray = new Uint8Array(analyser.frequencyBinCount);
+
+      analyser.getByteFrequencyData(fbcArray);
+      canvasContext.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
+      canvasContext.fillStyle = 'rgba(0, 205, 255, 0.75)';//'#00CCFF'; // Color of the bars
+      window.requestAnimationFrame(frameLooper);
+  
+      const barsNum = 100;
+      const barSpace = canvasWidth / barsNum;
+      const barWidth = 3;
+      const barLeftOffset = barSpace/2 - barWidth;
+      for (let i = 0; i < barsNum; i++) {
+        const barX = i * barSpace + barLeftOffset;
+        const amplitude = fbcArray[i];
+        const barHeight = -(amplitude / 2);
+        //  fillRect( x, y, width, height ) // Explanation of the parameters below
+        canvasContext.fillRect(barX, canvasHeight, barWidth, barHeight);
+      }
+    }
+  }
 
   function checkIfFaceEntersVolumeArea(detection) {
     const faceWidth = Number(detection.alignedRect.box.width);
@@ -121,26 +160,26 @@
   }
 
   playPauseBtn.addEventListener('click', () => {
-    checkCurrentMusicExist();
+    checkCurrentMusicExists();
     playBeepSound();
     currentMusic.paused ? playMusic() : pauseMusic();
   });
 
   volumeUpArea.addEventListener('click', () => {
-    checkCurrentMusicExist();
+    checkCurrentMusicExists();
     playBeepSound();
     const tmp = currentMusic.volume + 0.1;
     if(tmp <= 1) currentMusic.volume = tmp;
   });
 
   volumeDownArea.addEventListener('click', () => {
-    checkCurrentMusicExist();
+    checkCurrentMusicExists();
     playBeepSound();
     const tmp = currentMusic.volume - 0.1;
     if(tmp >= 0) currentMusic.volume = tmp;
   });
 
-  function checkCurrentMusicExist() {
+  function checkCurrentMusicExists() {
     if(!currentMusic) {
       currentMusic = audioFactory('audio/rock.mp3');
     }
