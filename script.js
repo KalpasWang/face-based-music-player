@@ -87,7 +87,7 @@
     const waveformCanvas = document.getElementById('waveform');
     const canvasContext = waveformCanvas.getContext('2d');
   
-    // Re-route audio playback into the processing graph of the AudioContext
+    analyser.fftSize = 256;
     const source = audioContext.createMediaElementSource(currentMusic); 
     source.connect(analyser);
     analyser.connect(audioContext.destination);
@@ -100,19 +100,24 @@
 
       analyser.getByteFrequencyData(fbcArray);
       canvasContext.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
-      canvasContext.fillStyle = 'rgba(0, 205, 255, 0.75)';//'#00CCFF'; // Color of the bars
+      // canvasContext.fillStyle = '#2b6bc0'; // Color of the bars
       window.requestAnimationFrame(frameLooper);
   
-      const barsNum = 100;
+      const barsNum = analyser.fftSize / 2.0;
       const barSpace = canvasWidth / barsNum;
-      const barWidth = 3;
-      const barLeftOffset = barSpace/2 - barWidth;
+      const barWidth = 2;
+  
       for (let i = 0; i < barsNum; i++) {
-        const barX = i * barSpace + barLeftOffset;
+        const barX = i * barSpace;
         const amplitude = fbcArray[i];
-        const barHeight = -(amplitude / 2);
-        //  fillRect( x, y, width, height ) // Explanation of the parameters below
-        canvasContext.fillRect(barX, canvasHeight, barWidth, barHeight);
+        const barHeight = amplitude / 2;
+        
+        canvasContext.lineWidth = barWidth;
+        canvasContext.strokeStyle = '#2b6bc0';
+        canvasContext.beginPath();
+        canvasContext.moveTo(barX, canvasHeight);
+        canvasContext.lineTo(barX, canvasHeight - barHeight);
+        canvasContext.stroke();
       }
     }
   }
@@ -149,8 +154,9 @@
 
   function audioFactory(url) {
     const audio = new Audio(url);
-    audio.pause();
+    // audio.pause();
     audio.currentTime = 0;
+    audio.autoplay = true;
     return audio;
   };
 
