@@ -40,8 +40,6 @@
 
     resizeVideoOverlay();
 
-    currentMusic = audioFactory('audio/rock.mp3');
-
     setInterval(async () => {
       const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
       console.log(detection);
@@ -53,13 +51,11 @@
         // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
         faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
 
-        checkIfEnterVolumeArea(detection);
+        checkIfFaceEntersVolumeArea(detection);
 
         const expression = detectExpression(detection);
         // if(expression) console.log(expression);
         if(Number.isInteger(expression)) {
-
-
           switch(expression) {
             case emotionEnum.happy:
               // playPauseBtn.click();
@@ -82,14 +78,14 @@
     videoOverlay.style.left = webcam.offsetLeft + 'px';
   };
 
-  function checkIfEnterVolumeArea(detection) {
+  function checkIfFaceEntersVolumeArea(detection) {
     const faceWidth = Number(detection.alignedRect.box.width);
-    const faceLeft = Number(detection.alignedRect.box.left) + faceWidth/3;
-    const faceRight = Number(detection.alignedRect.box.Right) - faceWidth/3;
+    const halfFace = Number(detection.alignedRect.box.left) + faceWidth/2;
     const volumeUpRight = Number(volumeUpArea.offsetLeft) + Number(volumeUpArea.offsetWidth);
     const volumeDownLeft = Number(volumeDownArea.offsetLeft);
     
-    if(volumeUpRight > faceLeft) volumeUpArea.click();
+    if(halfFace < volumeUpRight) volumeUpArea.click();
+    if(halfFace > volumeDownLeft) volumeDownArea.click();
   }
 
   function detectExpression(detection) {
@@ -125,23 +121,30 @@
   }
 
   playPauseBtn.addEventListener('click', () => {
-    if(!currentMusic) {
-      currentMusic = audioFactory('audio/rock.mp3');
-    }
-
+    checkCurrentMusicExist();
     playBeepSound();
     currentMusic.paused ? playMusic() : pauseMusic();
   });
 
   volumeUpArea.addEventListener('click', () => {
+    checkCurrentMusicExist();
+    playBeepSound();
+    const tmp = currentMusic.volume + 0.1;
+    if(tmp <= 1) currentMusic.volume = tmp;
+  });
+
+  volumeDownArea.addEventListener('click', () => {
+    checkCurrentMusicExist();
+    playBeepSound();
+    const tmp = currentMusic.volume - 0.1;
+    if(tmp >= 0) currentMusic.volume = tmp;
+  });
+
+  function checkCurrentMusicExist() {
     if(!currentMusic) {
       currentMusic = audioFactory('audio/rock.mp3');
     }
-
-    playBeepSound();
-    const tmp = currentMusic + 0.1;
-    if(tmp <= 1) currentMusic = tmp;
-  });
+  };
 
   function playMusic() {
     currentMusic.play();
