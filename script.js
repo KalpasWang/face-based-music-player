@@ -135,6 +135,25 @@
     currentMusic.addEventListener('ended', () => {
       playPauseBtn.innerHTML = '<i class="far fa-play-circle"></i>';
     });
+
+    currentMusic.ontimeupdate = function() {
+      const audioCurrentTime = document.getElementById('audio-current-time');
+      const time = currentMusic.currentTime;
+      const m = Math.floor(time/60);
+      let s = Math.floor(time % 60);
+      s = s < 10 ? `0${s}` : s;
+      audioCurrentTime.innerHTML = `${m}:${s}`;
+    };
+
+    const audioDuration = document.getElementById('audio-duration');
+    const time = currentMusic.duration;
+    if(isNaN(time)) {
+      audioDuration.innerHTML = '';
+      return;
+    }
+    let s = time % 60;
+    s = s < 10 ? `0${s}` : s;
+    audioDuration.innerHTML = `${time/60}:${s}`;
   }
 
   function checkIfFaceEntersVolumeArea(detection) {
@@ -172,6 +191,7 @@
     // audio.pause();
     audio.currentTime = 0;
     audio.autoplay = false;
+    audio.preload = 'metadata';
     return audio;
   };
 
