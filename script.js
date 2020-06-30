@@ -40,10 +40,11 @@
 
     resizeVideoOverlay();
     initAudioWaveforms();
+    setAudioEvents();
 
     setInterval(async () => {
       const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-      console.log(detection);
+      // console.log(detection);
 
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
       if(detection) {
@@ -94,16 +95,21 @@
     frameLooper();
   
     function frameLooper(){
+      window.requestAnimationFrame(frameLooper);
+
       const canvasWidth = waveformCanvas.offsetWidth;
       const canvasHeight = waveformCanvas.offsetHeight;
       let fbcArray = new Uint8Array(analyser.frequencyBinCount);
 
+      waveformCanvas.width = canvasWidth;
+      // waveformCanvas.height = canvasHeight;
       analyser.getByteFrequencyData(fbcArray);
       canvasContext.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
+      // console.log(fbcArray);
       // canvasContext.fillStyle = '#2b6bc0'; // Color of the bars
-      window.requestAnimationFrame(frameLooper);
+      
   
-      const barsNum = analyser.fftSize / 2.0;
+      const barsNum = analyser.fftSize/2.0 * 2/3;
       const barSpace = canvasWidth / barsNum;
       const barWidth = 2;
   
@@ -113,13 +119,22 @@
         const barHeight = amplitude / 2;
         
         canvasContext.lineWidth = barWidth;
-        canvasContext.strokeStyle = '#2b6bc0';
+        canvasContext.strokeStyle = '#90cdf4';
         canvasContext.beginPath();
         canvasContext.moveTo(barX, canvasHeight);
-        canvasContext.lineTo(barX, canvasHeight - barHeight);
+        if(barHeight > 0)
+          canvasContext.lineTo(barX, canvasHeight - barHeight);
+        else
+          canvasContext.lineTo(barX, canvasHeight - 1);
         canvasContext.stroke();
       }
     }
+  }
+
+  function setAudioEvents() {
+    currentMusic.addEventListener('ended', () => {
+      playPauseBtn.innerHTML = '<i class="far fa-play-circle"></i>';
+    });
   }
 
   function checkIfFaceEntersVolumeArea(detection) {
@@ -156,12 +171,13 @@
     const audio = new Audio(url);
     // audio.pause();
     audio.currentTime = 0;
-    audio.autoplay = true;
+    audio.autoplay = false;
     return audio;
   };
 
   function playBeepSound() {
     const beepSound = audioFactory('audio/beep.mp3');
+    beepSound.volume = 0.2;
     beepSound.play();
   }
 
