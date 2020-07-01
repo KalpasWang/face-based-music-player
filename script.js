@@ -37,6 +37,7 @@
     const canvasDisplaySize = { width: webcam.videoWidth, height: webcam.videoHeight };
     // faceapi.matchDimensions(faceDetectionCanvas, canvasDisplaySize);
     resizeVideoOverlay();
+    document.getElementById('spinner-container').remove();
 
 
     setInterval(async () => {
@@ -66,8 +67,12 @@
     }, 250)
   });
 
-  window.addEventListener('resize', resizeVideoOverlay);
-  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('resize', () => {
+    setTimeout(() => {
+      resizeCanvas();
+      resizeVideoOverlay();
+    }, 0);
+  });
 
   function resizeVideoOverlay() {
     const videoOverlay = document.getElementById('video-overlay');
@@ -95,7 +100,7 @@
     const waveformCanvas = document.getElementById('waveform');
     const canvasContext = waveformCanvas.getContext('2d');
   
-    analyser.fftSize = 256;
+    analyser.fftSize = 128;
     const source = audioContext.createMediaElementSource(currentMusic); 
     source.connect(analyser);
     analyser.connect(audioContext.destination);
@@ -115,7 +120,7 @@
       
       const barsNum = analyser.fftSize/2.0 * 2/3;
       const barSpace = canvasWidth / barsNum;
-      const barWidth = 2;
+      const barWidth = 4;
       const barMiddle = canvasHeight / 2 + 1;
   
       for (let i = 0; i < barsNum; i++) {

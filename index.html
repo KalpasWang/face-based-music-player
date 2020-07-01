@@ -6,10 +6,16 @@
   <title>Emotion-Based Music Player</title>
   <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
-  <!-- <link rel="stylesheet" href="style.css"> -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-black w-screen h-screen m-0 p-0 outline-none">
-  <div id="container" class="flex flex-col justify-between items-center p-6 w-full h-full text-center">
+  <div id="spinner-container" class="absolute w-full h-full z-30 bg-black">
+    <div class="flex justify-center items-center h-full w-full">
+      <div class="lds-dual-ring"></div>
+    </div>
+  </div>
+
+  <div id="container" class="flex flex-col justify-between items-center p-0 w-full h-full text-center">
     <h1 class="text-2xl my-8 text-gray-300">Face-Triggered Music Player</h1>
     <div>
       <video id="webcam" class="object-contain my-0 mx-auto" height="400" autoplay muted></video>
