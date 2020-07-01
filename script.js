@@ -7,8 +7,8 @@
       happy: 0,
     };
   let currentMusic = null;
-  let prevExpression = null;
   let stopDetectingExpression = false;
+  let faceDetectionCanvas = null;
 
   Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -27,31 +27,28 @@
   };
   
   webcam.addEventListener('play', () => {
-    let emotionsDiv = null;
-    let timeoutId = null;
-    const canvas = faceapi.createCanvasFromMedia(webcam);
-    canvas.classList.add('absolute', 'z-10');
-    canvas.style.top = webcam.offsetTop + 'px';
-    canvas.style.left = webcam.offsetLeft + 'px';
-    document.getElementById('container').append(canvas);
-
-    const canvasDisplaySize = { width: webcam.videoWidth, height: webcam.videoHeight };
-    faceapi.matchDimensions(canvas, canvasDisplaySize);
-
-    resizeVideoOverlay();
+    faceDetectionCanvas = faceapi.createCanvasFromMedia(webcam);
+    faceDetectionCanvas.classList.add('absolute', 'z-10');
     initAudioWaveforms();
     setAudioEvents();
+    resizeCanvas();
+    document.getElementById('container').append(faceDetectionCanvas);
+
+    const canvasDisplaySize = { width: webcam.videoWidth, height: webcam.videoHeight };
+    // faceapi.matchDimensions(faceDetectionCanvas, canvasDisplaySize);
+    resizeVideoOverlay();
+
 
     setInterval(async () => {
       const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
       // console.log(detection);
 
-      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      faceDetectionCanvas.getContext('2d').clearRect(0, 0, faceDetectionCanvas.width, faceDetectionCanvas.height);
       if(detection) {
         const resizedDetections = faceapi.resizeResults(detection, canvasDisplaySize);
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-        // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+        faceapi.draw.drawDetections(faceDetectionCanvas, resizedDetections);
+        // faceapi.draw.drawFaceLandmarks(faceDetectionCanvas, resizedDetections);
+        faceapi.draw.drawFaceExpressions(faceDetectionCanvas, resizedDetections);
 
         checkIfFaceEntersVolumeArea(detection);
 
@@ -66,10 +63,11 @@
           }
         }
       }
-    }, 200)
+    }, 250)
   });
 
   window.addEventListener('resize', resizeVideoOverlay);
+  window.addEventListener('resize', resizeCanvas);
 
   function resizeVideoOverlay() {
     const videoOverlay = document.getElementById('video-overlay');
@@ -79,6 +77,15 @@
     videoOverlay.style.top = webcam.offsetTop + 'px';
     videoOverlay.style.left = webcam.offsetLeft + 'px';
   };
+
+  function resizeCanvas() {
+    if(!faceDetectionCanvas) return;
+
+    faceDetectionCanvas.style.top = webcam.offsetTop + 'px';
+    faceDetectionCanvas.style.left = webcam.offsetLeft + 'px';
+    faceDetectionCanvas.style.top = webcam.offsetTop + 'px';
+    faceDetectionCanvas.style.left = webcam.offsetLeft + 'px';
+  }
 
   function initAudioWaveforms() {
     checkCurrentMusicExists();
@@ -102,30 +109,28 @@
       let fbcArray = new Uint8Array(analyser.frequencyBinCount);
 
       waveformCanvas.width = canvasWidth;
-      // waveformCanvas.height = canvasHeight;
+
       analyser.getByteFrequencyData(fbcArray);
       canvasContext.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
-      // console.log(fbcArray);
-      // canvasContext.fillStyle = '#2b6bc0'; // Color of the bars
       
-  
       const barsNum = analyser.fftSize/2.0 * 2/3;
       const barSpace = canvasWidth / barsNum;
       const barWidth = 2;
+      const barMiddle = canvasHeight / 2 + 1;
   
       for (let i = 0; i < barsNum; i++) {
         const barX = i * barSpace;
-        const amplitude = fbcArray[i];
-        const barHeight = amplitude / 2;
+        const amplitude = fbcArray[i] / 4.0;
+        const halfBarHeight = amplitude / 2;
         
         canvasContext.lineWidth = barWidth;
         canvasContext.strokeStyle = '#90cdf4';
         canvasContext.beginPath();
-        canvasContext.moveTo(barX, canvasHeight);
-        if(barHeight > 0)
-          canvasContext.lineTo(barX, canvasHeight - barHeight);
+        canvasContext.moveTo(barX, barMiddle + halfBarHeight);
+        if(halfBarHeight >= 1)
+          canvasContext.lineTo(barX, barMiddle - halfBarHeight);
         else
-          canvasContext.lineTo(barX, canvasHeight - 1);
+          canvasContext.lineTo(barX, barMiddle - 1);
         canvasContext.stroke();
       }
     }
@@ -134,6 +139,7 @@
   function setAudioEvents() {
     currentMusic.addEventListener('ended', () => {
       playPauseBtn.innerHTML = '<i class="far fa-play-circle"></i>';
+      document.getElementById('audio-current-time').innerHTML = '0:00';
     });
 
     currentMusic.ontimeupdate = function() {
@@ -145,15 +151,18 @@
       audioCurrentTime.innerHTML = `${m}:${s}`;
     };
 
-    const audioDuration = document.getElementById('audio-duration');
-    const time = currentMusic.duration;
-    if(isNaN(time)) {
-      audioDuration.innerHTML = '';
-      return;
-    }
-    let s = time % 60;
-    s = s < 10 ? `0${s}` : s;
-    audioDuration.innerHTML = `${time/60}:${s}`;
+    currentMusic.addEventListener('loadeddata', () => {
+      const audioDuration = document.getElementById('audio-duration');
+      const time = currentMusic.duration;
+      if(isNaN(time)) {
+        audioDuration.innerHTML = '';
+        return;
+      }
+      const m = Math.floor(time/60);
+      let s = Math.floor(time % 60);
+      s = s < 10 ? `0${s}` : s;
+      audioDuration.innerHTML = `${m}:${s}`;
+    });
   }
 
   function checkIfFaceEntersVolumeArea(detection) {
@@ -188,10 +197,8 @@
 
   function audioFactory(url) {
     const audio = new Audio(url);
-    // audio.pause();
     audio.currentTime = 0;
     audio.autoplay = false;
-    audio.preload = 'metadata';
     return audio;
   };
 
