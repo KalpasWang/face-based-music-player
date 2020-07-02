@@ -16,11 +16,30 @@
   animation: lds-dual-ring 1.2s linear infinite;
 }
 
+.pulse {
+  animation: pulse-animate 1s linear 1;
+}
+
 @keyframes lds-dual-ring {
   0% {
     transform: rotate(0deg);
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-animate {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255,255,255.7), 0 0 0 0 rgba(255,255,255,.7);
+  }
+  40% {
+    box-shadow: 0 0 0 50px rgba(255,255,255,0), 0 0 0 0 rgba(255,255,255,.7);
+  }
+  80% {
+    box-shadow: 0 0 0 50px rgba(255,255,255,0), 0 0 0 30px rgba(255,255,255,0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255,255,255,0), 0 0 0 30px rgba(255,255,255,0);
   }
 }

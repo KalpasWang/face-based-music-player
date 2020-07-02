@@ -1,6 +1,8 @@
 (function() {
   const webcam = document.getElementById('webcam');
   const playPauseBtn = document.getElementById('play-pause');
+  const playIcon = document.getElementById('play-icon');
+  const pauseIcon = document.getElementById('pause-icon');
   const volumeUpArea = document.getElementById('volume-up');
   const volumeDownArea = document.getElementById('volume-down');
   const emotionEnum = {
@@ -216,6 +218,9 @@
   playPauseBtn.addEventListener('click', () => {
     checkCurrentMusicExists();
     playBeepSound();
+    playPauseBtn.classList.remove('pulse');
+    void playPauseBtn.offsetWidth;
+    playPauseBtn.classList.add('pulse');
     currentMusic.paused ? playMusic() : pauseMusic();
   });
 
@@ -241,11 +246,13 @@
 
   function playMusic() {
     currentMusic.play();
-    playPauseBtn.innerHTML = '<i class="far fa-pause-circle"></i>';
+    playIcon.classList.add('hidden');
+    pauseIcon.classList.remove('hidden');
   };
 
   function pauseMusic() {
     currentMusic.pause();
-    playPauseBtn.innerHTML = '<i class="far fa-play-circle"></i>';
+    playIcon.classList.remove('hidden');
+    pauseIcon.classList.add('hidden');
   };
 }());
