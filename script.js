@@ -6,16 +6,18 @@
   const volumeUpArea = document.getElementById('volume-up');
   const volumeDownArea = document.getElementById('volume-down');
   const emotionEnum = {
-      happy: 0,
+      disgusted: 0,
     };
   let currentMusic = null;
   let stopDetectingExpression = false;
-  let faceDetectionCanvas = null;
+  let faceCanvas = null;
 
+
+  /**  Init face datection api and call webcam
+   */
   Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
     faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-    // faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
     faceapi.nets.faceExpressionNet.loadFromUri('/models')
   ]).then(startVideo);
 
@@ -28,45 +30,52 @@
       .catch(err => console.error(err))
   };
   
+
   webcam.addEventListener('play', () => {
-    faceDetectionCanvas = faceapi.createCanvasFromMedia(webcam);
-    faceDetectionCanvas.classList.add('absolute', 'z-10');
+    /** create canvas to show face detected and prepare audio waveform, 
+     *  also resize volume controls which is an overlay on video
+    */
+    faceCanvas = faceapi.createCanvasFromMedia(webcam);
+    faceCanvas.classList.add('absolute', 'z-10');
     initAudioWaveforms();
     setAudioEvents();
     resizeCanvas();
-    document.getElementById('container').append(faceDetectionCanvas);
-
-    const canvasDisplaySize = { width: webcam.videoWidth, height: webcam.videoHeight };
-    // faceapi.matchDimensions(faceDetectionCanvas, canvasDisplaySize);
+    document.getElementById('container').append(faceCanvas);
     resizeVideoOverlay();
-    document.getElementById('spinner-container').remove();
 
-
+    /** use setInterval repeatedly detect face and expressions in current video,
+     *  also draw face position on canvas
+     */
     setInterval(async () => {
+      // detecting face and expressions
       const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-      // console.log(detection);
+      // clear canvas
+      faceCanvas.getContext('2d').clearRect(0, 0, faceCanvas.width, faceCanvas.height);
 
-      faceDetectionCanvas.getContext('2d').clearRect(0, 0, faceDetectionCanvas.width, faceDetectionCanvas.height);
       if(detection) {
-        const resizedDetections = faceapi.resizeResults(detection, canvasDisplaySize);
-        faceapi.draw.drawDetections(faceDetectionCanvas, resizedDetections);
-        // faceapi.draw.drawFaceLandmarks(faceDetectionCanvas, resizedDetections);
-        faceapi.draw.drawFaceExpressions(faceDetectionCanvas, resizedDetections);
+        // draw detection results
+        // const resizedDetections = faceapi.resizeResults(detection, { width: webcam.videoWidth, height: webcam.videoHeight });
+        faceapi.draw.drawDetections(faceCanvas, detection);
+        faceapi.draw.drawFaceExpressions(faceCanvas, detection);
 
+        // determine that is face entering volume controls areas
         checkIfFaceEntersVolumeArea(detection);
-
+        // check if expression is what we expect
         const expression = detectExpression(detection);
-        // if(expression) console.log(expression);
+
+        // different expressionshave different commands (only disgusted noe)
         if(Number.isInteger(expression)) {
           switch(expression) {
-            case emotionEnum.happy:
-              // playPauseBtn.click();
+            case emotionEnum.disgusted:
+              playPauseBtn.click();
               break;
             default:
           }
         }
       }
-    }, 250)
+    }, 250);
+
+    document.getElementById('spinner-container').remove();
   });
 
   window.addEventListener('resize', () => {
@@ -86,12 +95,12 @@
   };
 
   function resizeCanvas() {
-    if(!faceDetectionCanvas) return;
+    if(!faceCanvas) return;
 
-    faceDetectionCanvas.style.top = webcam.offsetTop + 'px';
-    faceDetectionCanvas.style.left = webcam.offsetLeft + 'px';
-    faceDetectionCanvas.style.top = webcam.offsetTop + 'px';
-    faceDetectionCanvas.style.left = webcam.offsetLeft + 'px';
+    faceCanvas.style.top = webcam.offsetTop + 'px';
+    faceCanvas.style.left = webcam.offsetLeft + 'px';
+    faceCanvas.style.top = webcam.offsetTop + 'px';
+    faceCanvas.style.left = webcam.offsetLeft + 'px';
   }
 
   function initAudioWaveforms() {
@@ -122,7 +131,7 @@
       
       const barsNum = analyser.fftSize/2.0 * 2/3;
       const barSpace = canvasWidth / barsNum;
-      const barWidth = 4;
+      const barWidth = 5;
       const barMiddle = canvasHeight / 2 + 1;
   
       for (let i = 0; i < barsNum; i++) {
@@ -131,7 +140,7 @@
         const halfBarHeight = amplitude / 2;
         
         canvasContext.lineWidth = barWidth;
-        canvasContext.strokeStyle = '#90cdf4';
+        canvasContext.strokeStyle = '#CA715F';
         canvasContext.beginPath();
         canvasContext.moveTo(barX, barMiddle + halfBarHeight);
         if(halfBarHeight >= 1)
@@ -186,11 +195,11 @@
     if(stopDetectingExpression) return;
 
     const emotions = [];
-    emotions[emotionEnum.happy] = detection.expressions['happy'] || 0;
+    emotions[emotionEnum.disgusted] = detection.expressions['disgusted'] || 0;
 
 
     for(let [k, v] of Object.entries(detection.expressions)) {
-      if(v > emotions[emotionEnum.happy] && emotionEnum[k] === undefined) {
+      if(v > emotions[emotionEnum.disgusted] && emotionEnum[k] === undefined) {
         prevExpression = null;
         return;
       }
@@ -199,7 +208,7 @@
     stopDetectingExpression = true;
     setTimeout(() => { stopDetectingExpression = false; }, 3000);
 
-    return emotionEnum.happy;
+    return emotionEnum.disgusted;
   };
 
   function audioFactory(url) {
@@ -227,6 +236,9 @@
   volumeUpArea.addEventListener('click', () => {
     checkCurrentMusicExists();
     playBeepSound();
+    volumeUpArea.classList.remove('pulse-pink');
+    void volumeUpArea.clientWidth;
+    volumeUpArea.classList.add('pulse-pink');
     const tmp = currentMusic.volume + 0.1;
     if(tmp <= 1) currentMusic.volume = tmp;
   });
@@ -234,6 +246,9 @@
   volumeDownArea.addEventListener('click', () => {
     checkCurrentMusicExists();
     playBeepSound();
+    volumeDownArea.classList.remove('pulse-pink');
+    void volumeDownArea.clientWidth;
+    volumeDownArea.classList.add('pulse-pink');
     const tmp = currentMusic.volume - 0.1;
     if(tmp >= 0) currentMusic.volume = tmp;
   });

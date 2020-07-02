@@ -20,6 +20,15 @@
   animation: pulse-animate 1s linear 1;
 }
 
+.pulse-pink {
+  animation: pulse-pink-animate 1s linear 1;
+}
+
+.bg-gradient {
+  background: rgb(76,29,128);
+  background: linear-gradient(180deg, rgba(76,29,128,1) 0%, rgba(115,31,83,1) 100%);
+}
+
 @keyframes lds-dual-ring {
   0% {
     transform: rotate(0deg);
@@ -41,5 +50,20 @@
   }
   100% {
     box-shadow: 0 0 0 0 rgba(255,255,255,0), 0 0 0 30px rgba(255,255,255,0);
+  }
+}
+
+@keyframes pulse-pink-animate {
+  0% {
+    box-shadow: 0 0 0 0 rgba(115,31,83.7), 0 0 0 0 rgba(115,31,83,.7);
+  }
+  40% {
+    box-shadow: 0 0 0 50px rgba(115,31,83,0), 0 0 0 0 rgba(115,31,83,.7);
+  }
+  80% {
+    box-shadow: 0 0 0 50px rgba(115,31,83,0), 0 0 0 30px rgba(115,31,83,0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(115,31,83,0), 0 0 0 30px rgba(115,31,83,0);
   }
 }
