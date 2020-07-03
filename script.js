@@ -75,9 +75,13 @@
       }
     }, 250);
 
+    // all is ready, remove loading animation
     document.getElementById('spinner-container').remove();
   });
 
+  /** adjust canvas and volume control areas to fit video position and size when
+   *  window resize
+   */
   window.addEventListener('resize', () => {
     setTimeout(() => {
       resizeCanvas();
@@ -85,6 +89,7 @@
     }, 0);
   });
 
+  /** resize volume control areas */
   function resizeVideoOverlay() {
     const videoOverlay = document.getElementById('video-overlay');
 
@@ -94,6 +99,7 @@
     videoOverlay.style.left = webcam.offsetLeft + 'px';
   };
 
+  /** resize canvas to show correct face position */
   function resizeCanvas() {
     if(!faceCanvas) return;
 
@@ -103,9 +109,11 @@
     faceCanvas.style.left = webcam.offsetLeft + 'px';
   }
 
+  /** ready for drawing audio waveform and draw waveform every frame */
   function initAudioWaveforms() {
     checkCurrentMusicExists();
 
+    // prepare audio context and waveform canvas
     const audioContext = new AudioContext(); 
     const analyser = audioContext.createAnalyser(); 
     const waveformCanvas = document.getElementById('waveform');
@@ -117,6 +125,7 @@
     analyser.connect(audioContext.destination);
     frameLooper();
   
+    /** draw audio frequency domain waveform for every frame */
     function frameLooper(){
       window.requestAnimationFrame(frameLooper);
 
@@ -129,9 +138,11 @@
       analyser.getByteFrequencyData(fbcArray);
       canvasContext.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
       
+      // only draw 2/3 waveform becuase most high frequency is 0 
       const barsNum = analyser.fftSize/2.0 * 2/3;
       const barSpace = canvasWidth / barsNum;
       const barWidth = 5;
+      // draw from middle point
       const barMiddle = canvasHeight / 2 + 1;
   
       for (let i = 0; i < barsNum; i++) {
@@ -152,12 +163,16 @@
     }
   }
 
+  /** set audio event to adjust current time and duration */
   function setAudioEvents() {
+    // when music reachs end, change icon and reset current time
     currentMusic.addEventListener('ended', () => {
-      playPauseBtn.innerHTML = '<i class="far fa-play-circle"></i>';
+      playIcon.classList.remove('hidden');
+      pauseIcon.classList.add('hidden');
       document.getElementById('audio-current-time').innerHTML = '0:00';
     });
 
+    // update current time when playing
     currentMusic.ontimeupdate = function() {
       const audioCurrentTime = document.getElementById('audio-current-time');
       const time = currentMusic.currentTime;
@@ -167,6 +182,7 @@
       audioCurrentTime.innerHTML = `${m}:${s}`;
     };
 
+    //  update duration when audio data is loaded
     currentMusic.addEventListener('loadeddata', () => {
       const audioDuration = document.getElementById('audio-duration');
       const time = currentMusic.duration;
@@ -191,13 +207,15 @@
     if(halfFace > volumeDownLeft) volumeDownArea.click();
   }
 
+  /** check current face's expression */
   function detectExpression(detection) {
     if(stopDetectingExpression) return;
 
     const emotions = [];
+    // if there are no disgusted, set to 0
     emotions[emotionEnum.disgusted] = detection.expressions['disgusted'] || 0;
 
-
+    // if another expression probability is greater than disgusted's, return
     for(let [k, v] of Object.entries(detection.expressions)) {
       if(v > emotions[emotionEnum.disgusted] && emotionEnum[k] === undefined) {
         prevExpression = null;
@@ -205,6 +223,7 @@
       }
     }
 
+    // now disgusted is highest, stop detecting face for prevent accidently detecting again
     stopDetectingExpression = true;
     setTimeout(() => { stopDetectingExpression = false; }, 3000);
 
@@ -224,31 +243,43 @@
     beepSound.play();
   }
 
+  /**  play button also can be clicked */
   playPauseBtn.addEventListener('click', () => {
     checkCurrentMusicExists();
     playBeepSound();
+
+    // start pulse effect animation
     playPauseBtn.classList.remove('pulse');
     void playPauseBtn.offsetWidth;
     playPauseBtn.classList.add('pulse');
+
     currentMusic.paused ? playMusic() : pauseMusic();
   });
 
+  /** volume control areas can also be clicked */
   volumeUpArea.addEventListener('click', () => {
     checkCurrentMusicExists();
     playBeepSound();
+
+    // start pulse effect animation
     volumeUpArea.classList.remove('pulse-pink');
     void volumeUpArea.clientWidth;
     volumeUpArea.classList.add('pulse-pink');
+
     const tmp = currentMusic.volume + 0.1;
     if(tmp <= 1) currentMusic.volume = tmp;
   });
 
+  /** volume control areas can also be clicked */
   volumeDownArea.addEventListener('click', () => {
     checkCurrentMusicExists();
     playBeepSound();
+
+    // start pulse effect animation
     volumeDownArea.classList.remove('pulse-pink');
     void volumeDownArea.clientWidth;
     volumeDownArea.classList.add('pulse-pink');
+    
     const tmp = currentMusic.volume - 0.1;
     if(tmp >= 0) currentMusic.volume = tmp;
   });
