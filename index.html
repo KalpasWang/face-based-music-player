@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Emotion-Based Music Player</title>
+  <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
   <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
   <link rel="stylesheet" href="style.css">
@@ -19,8 +20,8 @@
     <h1 class="text-2xl my-5 text-gray-300">Face-Triggered Music Player</h1>
     <div>
       <video id="webcam" class="object-contain my-0 mx-auto" height="400" autoplay muted></video>
-      <div id="video-overlay" class="absolute">
-        <div class="w-full h-full flex justify-between items-stretch overflow-visible">
+      <div id="video-overlay" class="absolute p-0">
+        <div class="w-full h-full flex justify-between items-stretch m-0 p-0 overflow-visible">
           <div id="volume-up" class="w-1/4 bg-pink-900 bg-opacity-75 text-2xl text-white flex justify-center items-center cursor-pointer z-20">
             <i class="fas fa-volume-up"></i>
           </div>

@@ -29,72 +29,37 @@
       .then(stream => webcam.srcObject = stream)
       .catch(err => console.error(err))
   };
-  
 
-  webcam.addEventListener('play', () => {
-    /** create canvas to show face detected and prepare audio waveform, 
-     *  also resize volume controls which is an overlay on video
-    */
-    faceCanvas = faceapi.createCanvasFromMedia(webcam);
-    faceCanvas.classList.add('absolute', 'z-10');
-    initAudioWaveforms();
-    setAudioEvents();
-    resizeCanvas();
-    document.getElementById('container').append(faceCanvas);
-    resizeVideoOverlay();
 
-    /** use setInterval repeatedly detect face and expressions in current video,
-     *  also draw face position on canvas
-     */
-    setInterval(async () => {
-      // detecting face and expressions
-      const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-      // clear canvas
-      faceCanvas.getContext('2d').clearRect(0, 0, faceCanvas.width, faceCanvas.height);
-
-      if(detection) {
-        // draw detection results
-        // const resizedDetections = faceapi.resizeResults(detection, { width: webcam.videoWidth, height: webcam.videoHeight });
-        faceapi.draw.drawDetections(faceCanvas, detection);
-        faceapi.draw.drawFaceExpressions(faceCanvas, detection);
-
-        // determine that is face entering volume controls areas
-        checkIfFaceEntersVolumeArea(detection);
-        // check if expression is what we expect
-        const expression = detectExpression(detection);
-
-        // different expressionshave different commands (only disgusted noe)
-        if(Number.isInteger(expression)) {
-          switch(expression) {
-            case emotionEnum.disgusted:
-              playPauseBtn.click();
-              break;
-            default:
-          }
-        }
-      }
-    }, 250);
-
-    // all is ready, remove loading animation
-    document.getElementById('spinner-container').remove();
-  });
 
   /** adjust canvas and volume control areas to fit video position and size when
    *  window resize
    */
   window.addEventListener('resize', () => {
     setTimeout(() => {
+      resizeWebcam();
       resizeCanvas();
       resizeVideoOverlay();
     }, 0);
   });
+  /** resize webcam to fit in webpage */
+  function resizeWebcam() {
+    bodyWidth = document.body.clientWidth;
+    if(bodyWidth < webcam.videoWidth) {
+      webcam.height = webcam.videoHeight * (bodyWidth / webcam.videoWidth);
+      webcam.width = bodyWidth;
+      return;
+    }
+    webcam.width = webcam.videoWidth;
+    webcam.height = webcam.videoHeight;
+  }
 
   /** resize volume control areas */
   function resizeVideoOverlay() {
     const videoOverlay = document.getElementById('video-overlay');
 
-    videoOverlay.style.width = webcam.videoWidth + 'px';
-    videoOverlay.style.height = webcam.videoHeight + 'px';
+    videoOverlay.style.width = webcam.width + 'px';
+    videoOverlay.style.height = webcam.height + 'px';
     videoOverlay.style.top = webcam.offsetTop + 'px';
     videoOverlay.style.left = webcam.offsetLeft + 'px';
   };
@@ -103,8 +68,8 @@
   function resizeCanvas() {
     if(!faceCanvas) return;
 
-    faceCanvas.style.top = webcam.offsetTop + 'px';
-    faceCanvas.style.left = webcam.offsetLeft + 'px';
+    faceCanvas.style.width = webcam.width + 'px';
+    faceCanvas.style.height = webcam.height + 'px';
     faceCanvas.style.top = webcam.offsetTop + 'px';
     faceCanvas.style.left = webcam.offsetLeft + 'px';
   }
@@ -148,7 +113,7 @@
       for (let i = 0; i < barsNum; i++) {
         const barX = i * barSpace;
         const amplitude = fbcArray[i] / 4.0;
-        const halfBarHeight = amplitude / 2;
+        const halfBarHeight = amplitude*currentMusic.volume / 2;
         
         canvasContext.lineWidth = barWidth;
         canvasContext.strokeStyle = '#CA715F';
@@ -301,4 +266,55 @@
     playIcon.classList.remove('hidden');
     pauseIcon.classList.add('hidden');
   };
+
+  webcam.addEventListener('play', () => {
+    /** create canvas to show face detected and prepare audio waveform, 
+     *  also resize volume controls which is an overlay on video
+    */
+    faceCanvas = faceapi.createCanvasFromMedia(webcam);
+    faceCanvas.classList.add('absolute', 'z-10');
+    initAudioWaveforms();
+    setAudioEvents();
+    resizeWebcam();
+    resizeCanvas();
+    document.getElementById('container').append(faceCanvas);
+    resizeVideoOverlay();
+
+    /** use setInterval repeatedly detect face and expressions in current video,
+     *  also draw face position on canvas
+     */
+    setInterval(async () => {
+      // detecting face and expressions
+      const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+      // clear canvas
+      faceCanvas.getContext('2d').clearRect(0, 0, faceCanvas.width, faceCanvas.height);
+
+      if(detection) {
+        // draw detection results
+        // const resizedDetections = faceapi.resizeResults(detection, { width: webcam.videoWidth, height: webcam.videoHeight });
+        faceapi.draw.drawDetections(faceCanvas, detection);
+        faceapi.draw.drawFaceExpressions(faceCanvas, detection);
+
+        // determine that is face entering volume controls areas
+        checkIfFaceEntersVolumeArea(detection);
+        // check if expression is what we expect
+        const expression = detectExpression(detection);
+
+        // different expressionshave different commands (only disgusted noe)
+        if(Number.isInteger(expression)) {
+          switch(expression) {
+            case emotionEnum.disgusted:
+              playPauseBtn.click();
+              break;
+            default:
+          }
+        }
+      }
+      
+      // all is ready, remove loading animation
+      document.getElementById('spinner-container').classList.add('hidden');
+    }, 250);
+
+
+  });
 }());
