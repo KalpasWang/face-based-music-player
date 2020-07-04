@@ -310,11 +310,9 @@
           }
         }
       }
-
-      // all is ready, remove loading animation
-      document.getElementById('spinner-container').classList.add('hidden');
     }, 250);
 
-
+    // all is ready, remove loading animation
+    document.getElementById('spinner-container').classList.add('hidden');
   });
 }());
