@@ -6,7 +6,7 @@
   const volumeUpArea = document.getElementById('volume-up');
   const volumeDownArea = document.getElementById('volume-down');
   const emotionEnum = {
-      disgusted: 0,
+      surprised: 0,
     };
   let currentMusic = null;
   let stopDetectingExpression = false;
@@ -16,9 +16,9 @@
   /**  Init face datection api and call webcam
    */
   Promise.all([
-    faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
-    faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
-    faceapi.nets.faceExpressionNet.loadFromUri('./models')
+    faceapi.nets.tinyFaceDetector.loadFromUri('https://kalpaswang.github.io/face-based-music-player/models'),
+    faceapi.nets.faceLandmark68Net.loadFromUri('https://kalpaswang.github.io/face-based-music-player/models'),
+    faceapi.nets.faceExpressionNet.loadFromUri('https://kalpaswang.github.io/face-based-music-player/models')
   ]).then(startVideo);
 
   function startVideo() {
@@ -177,22 +177,22 @@
     if(stopDetectingExpression) return;
 
     const emotions = [];
-    // if there are no disgusted, set to 0
-    emotions[emotionEnum.disgusted] = detection.expressions['disgusted'] || 0;
+    // if there are no surprised, set to 0
+    emotions[emotionEnum.surprised] = detection.expressions['surprised'] || 0;
 
-    // if another expression probability is greater than disgusted's, return
+    // if another expression probability is greater than surprised's, return
     for(let [k, v] of Object.entries(detection.expressions)) {
-      if(v > emotions[emotionEnum.disgusted] && emotionEnum[k] === undefined) {
+      if(v > emotions[emotionEnum.surprised] && emotionEnum[k] === undefined) {
         prevExpression = null;
         return;
       }
     }
 
-    // now disgusted is highest, stop detecting face for prevent accidently detecting again
+    // now surprised is highest, stop detecting face for prevent accidently detecting again
     stopDetectingExpression = true;
     setTimeout(() => { stopDetectingExpression = false; }, 3000);
 
-    return emotionEnum.disgusted;
+    return emotionEnum.surprised;
   };
 
   function audioFactory(url) {
@@ -300,10 +300,10 @@
         // check if expression is what we expect
         const expression = detectExpression(detection);
 
-        // different expressionshave different commands (only disgusted noe)
+        // different expressionshave different commands (only surprised noe)
         if(Number.isInteger(expression)) {
           switch(expression) {
-            case emotionEnum.disgusted:
+            case emotionEnum.surprised:
               playPauseBtn.click();
               break;
             default:
