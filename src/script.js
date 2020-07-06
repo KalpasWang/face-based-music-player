@@ -203,7 +203,7 @@
   };
 
   function playBeepSound() {
-    const beepSound = audioFactory('audio/beep.mp3');
+    const beepSound = audioFactory('build/audio/beep.mp3');
     beepSound.volume = 0.2;
     beepSound.play();
   }
@@ -251,7 +251,7 @@
 
   function checkCurrentMusicExists() {
     if(!currentMusic) {
-      currentMusic = audioFactory('audio/rock.mp3');
+      currentMusic = audioFactory('build/audio/rock.mp3');
     }
   };
 
@@ -284,8 +284,12 @@
      *  also draw face position on canvas
      */
     setInterval(async () => {
+
       // detecting face and expressions
-      const detection = await faceapi.detectSingleFace(webcam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+      const detection = await faceapi.detectSingleFace(webcam, 
+        new faceapi.TinyFaceDetectorOptions({ inputSize: 224 }))
+        .withFaceLandmarks()
+        .withFaceExpressions();
       // clear canvas
       faceCanvas.getContext('2d').clearRect(0, 0, faceCanvas.width, faceCanvas.height);
 
@@ -310,7 +314,8 @@
           }
         }
       }
-    }, 250);
+      
+    }, 200);
 
     // all is ready, remove loading animation
     document.getElementById('spinner-container').classList.add('hidden');
