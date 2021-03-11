@@ -20,7 +20,7 @@
     "des.js": "^1.0.1",
     "domain-browser": "^1.2.0",
     "emojis-list": "^3.0.0",
-    "elliptic": "^6.5.3",
+    "elliptic": "^6.5.4",
     "estraverse": "^4.3.0",
     "esrecurse": "^4.2.1",
     "events": "^3.1.0",
