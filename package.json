@@ -33,7 +33,7 @@
     "fs.realpath": "^1.0.0",
     "get-value": "^2.0.6",
     "graceful-fs": "^4.2.4",
-    "glob-parent": "^5.1.1",
+    "glob-parent": "^5.1.2",
     "has-value": "^1.0.0",
     "has-values": "^1.0.0",
     "hash.js": "^1.1.7",
